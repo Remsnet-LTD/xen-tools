@@ -307,6 +307,13 @@ and EVMS EXAMPLE.
                 Optionally, set a specific vif name for the new
                 instance.
 
+   --dnssearch=domains
+                Setup the search list for hostname lookup.
+
+   --ntpserver=address
+                Setup a time server for the machine, multiple space-separated
+                servers are allowed.
+
 
 
   Mandatory options:
@@ -775,7 +782,7 @@ Install an X11 server, using VNC and XDM
  Steve Kemp, http://www.steve.org.uk/
  Axel Beckert, http://noone.org/abe/
  Dmitry Nedospasov, http://nedos.net/
- StÃ©phane Jourdois
+ Stéphane Jourdois
 
 
 =head1 LICENSE
@@ -1470,6 +1477,8 @@ sub setupDefaultOptions
     #  Network options.
     #
     $CONFIG{ 'nameserver' } = '';
+    $CONFIG{ 'dnssearch' }  = 'localdomain';
+    $CONFIG{ 'ntpserver' }  = '1.pool.ntp.org 2.pool.ntp.org';
 
 }
 
@@ -1707,6 +1716,8 @@ sub parseCommandLineArguments
             "nameserver=s", \&checkOption,
             "vifname=s",    \&checkOption,
             "p2p=s",        \&checkOption,
+            "dnssearch=s",  \$CONFIG{ 'dnssearch' },
+            "ntpserver=s",  \$CONFIG{ 'ntpserver' },
 
             # Exclusive
             #
@@ -3675,6 +3686,8 @@ sub runCustomisationHooks
 
     $ENV{ 'ip_count' } = ( $count - 1 );
 
+    my %netinfo = getNetworkInfo($ENV{'ip1'}, $CONFIG{'netmask'});
+    @ENV{keys %netinfo} = values %netinfo;
 
     #
     #  Now show the environment the children get
@@ -4242,40 +4255,6 @@ sub unMountImage
 }
 
 
-=begin getIfCfg
-
-    Get getIfCfg based on IP, netmask and broadcast address
-
-=cut
-
-sub getIfCfg {
-    my ($ip, $netmask, $broadcast) = @_;
-
-    my $network_info = getNetworkInfo($ip, $netmask);
-
-    my $ossip1  = sprintf("%s/%s", $ip, $network_info->{cidr});
-    my $network = $network_info->{ip};
-
-    my $opensuse_config = <<CONFIG
-STARTMODE='auto'
-BOOTPROTO='static'
-BROADCAST=$broadcast
-NETMASK=$netmask
-NAME='eth0'
-ETHTOOL_OPTIONS=''
-IPADDR=$ossip1
-MTU=''
-NETWORK=$network
-REMOTE_IPADDR=''
-USERCONTROL='no'
-E_O_STATIC
-CONFIG
-;
-
-    return $opensuse_config;
-}
-
-
 =begin getNetworkInfo
 
     Get network IP and cidr based on IP and Netmask using ipcalc
@@ -4283,31 +4262,46 @@ CONFIG
 =cut
 
 sub getNetworkInfo {
-    my ($ip, $netmask) = @_;
+    my ($ipaddr, $nmask) = @_;
 
-    my $cidr       = '';
-    my $network_ip = '';
+    logprint("Cannot parse CIDR and Network, no IP provided") unless $ipaddr;
+    logpring("Cannot parse CIDR and Network, no netmask provided") unless $nmask;
 
-    open my $FILE, "/bin/ipcalc/ipcalc -b -c $ip $netmask|" or die "can't $!";
-    while (my $line = <$FILE>) {
-        chomp $line;
+    my @octet = split(/\./, $nmask);
+    my @bits;
+    my $binmask;
+    my $binoct;
+    my $bitcount = 0;
 
-        if ($line =~ /Network/i) {
-            my (undef, $ip_cidr) = split(':', $line);
+    foreach (@octet) {
+      $binoct = unpack("B32", pack("N", $_));
 
-            ($network_ip, $cidr) = split('/', $ip_cidr);
-
-            $cidr       =~ s/\s+//g;
-            $network_ip =~ s/\s+//g;
-        }
+      $binmask = $binmask . substr $binoct, -8;
     }
-    close $FILE;
 
-    fail("Cannot parse CIDR and Network") if (!$cidr && !$network_ip);
+    @bits = split (//, $binmask);
+    foreach (@bits) {
+      if ($_ eq "1") {
+        $bitcount++;
+      }
+    }
+
+    my @addrarr     = split(/\./, $ipaddr);
+    my ($ipaddress) = unpack("N", pack( "C4", @addrarr));
+
+    my @maskarr   = split(/\./, $nmask);
+    my ($netmask) = unpack("N", pack( "C4",@maskarr));
+
+
+    my $netadd     = ($ipaddress & $netmask);
+    my @netarr     = unpack("C4", pack("N", $netadd));
+    my $netaddress = join(".", @netarr);
+
+    logprint("Found $netaddress/$bitcount");
 
     return {
-        cidr => $cidr,
-        ip   => $network_ip,
+        'maskbits' => $bitcount,
+        'network'  => $netaddress,
     };
 }
 

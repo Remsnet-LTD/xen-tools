@@ -26,10 +26,10 @@ logMessage Script $0 starting
 
 
 #
-#  Make sure we have an /etc/sysconfig/network-scripts directory - required by network scripts
+#  Make sure we have an /etc/sysconfig/network directory - required by network scripts
 #
 if [ ! -d ${prefix}/etc/sysconfig/network/ ]; then
-mkdir -p ${prefix}/etc/sysconfig/network/
+  mkdir -p ${prefix}/etc/sysconfig/network/
 fi
 
 #  Make sure we have an /var/run/netreport - required by network-functions
@@ -54,14 +54,13 @@ if [ ! -z "${dhcp}" ]; then
     #
     cat <<E_O_STATIC >${prefix}/etc/sysconfig/network/ifcfg-eth0
 STARTMODE='auto'
-NAME=eth0'
+NAME='eth0'
 ETHTOOL_OPTIONS=''
 BOOTPROTO='static'
-IPADDR=${ip1}
+IPADDR=$ip1/$maskbits
+NETWORK=$network
 MTU=''
-NETMASK=${netmask}
-GATEWAY=${gateway}
-BROADCAST${broadcast}
+BROADCAST=$broadcast
 REMOTE_IPADDR=''
 USERCONTROL='no'
 #
@@ -78,17 +77,17 @@ E_O_STATIC
          value=\$ip${count}
          value=`eval echo $value`
 
-         logMessage Adding etho:${interface}
+         logMessage Adding eth${interface}
 
-         cat <<E_O_STATIC >${prefix}/etc/sysconfig/network-scripts/ifcfg-eth0:${interface}
+         cat <<E_O_STATIC >${prefix}/etc/sysconfig/network/ifcfg-eth${interface}
 STARTMODE='auto'
-NAME=eth0:${interface}
+NAME=eth$interface
 ONBOOT=yes
 MTU=''
 BOOTPROTO=static
-IPADDR=${value}
-NETMASK=${netmask}
-BROADCAST${broadcast}
+IPADDR=$value/$maskbits
+NETWORK=$network
+BROADCAST=$broadcast
 REMOTE_IPADDR=''
 USERCONTROL='no'
 #
@@ -111,7 +110,7 @@ E_O_STATIC
         cp /etc/resolv.conf ${prefix}/etc/resolv.conf.old
     fi
 else
-    cat <<E_O_DHCP >${prefix}/etc/sysconfig/network-scripts/ifcfg-eth0
+    cat <<E_O_DHCP >${prefix}/etc/sysconfig/network/ifcfg-eth0
 STARTMODE='auto'
 NAME=eth0
 BOOTPROTO=dhcp
@@ -124,6 +123,33 @@ fi
 #
 # SuSE stype : setup the default route.
 echo "default" ${gateway} "- -"  >${prefix}/etc/sysconfig/network/routes
+
+
+# add hostname to /etc/hosts
+echo "$ip1" "$hostname" >>"$prefix"/etc/hosts
+
+#
+#--------------------------------------------
+ntpserver="$nameserver"
+dnssearch='softwareenergie.eu softwareenergie.de softwareenergie.at ads.softwareenergie.eu remsnet.net'
+
+# parse config file
+conf="$prefix"/etc/sysconfig/network/config
+cp "$conf" "$conf"-orig
+sed '
+	/^NETCONFIG_DNS_STATIC_SERVERS=/ {
+		s/=.*/="'"$nameserver"'"/
+	}
+	/^NETCONFIG_NTP_STATIC_SERVERS=/ {
+		s/=.*/="'"$ntpserver"'"/
+	}
+	/^NETCONFIG_DNS_STATIC_SEARCHLIST=/ {
+		s/=.*/="'"$dnssearch"'"/
+	}
+	/^NOZEROCONF=/ {
+		s/=.*/="yes"/
+	}
+' "$conf"-orig > "$conf"
 
 #
 #  Log our finish
