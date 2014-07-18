@@ -105,8 +105,8 @@ E_O_STATIC
         rm -f ${prefix}/etc/resolv.conf.old
         for ns in $nameserver; do
             echo "nameserver $ns" >>${prefix}/etc/resolv.conf.old
-            echo "search $dnssearch" >>${prefix}/etc/resolv.conf.old
         done
+        echo "search $dnssearch" >>${prefix}/etc/resolv.conf.old
     else
         cp /etc/resolv.conf ${prefix}/etc/resolv.conf.old
     fi
