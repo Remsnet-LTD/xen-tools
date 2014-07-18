@@ -1,3 +1,8 @@
+xen-tools 4.4.rcis2-dev04 (Forked release  12-July-2014)
+- Add patch for --dnssearch and --ntpsserver options to xen-create-image to provide ENV $dnssearch and $ntpserver
+  this been used at the opensuse 40-setup-networking to handel variables at $prefix/etc/sysconfig/network/config
+- more patching xen-create-image and 40-setup-networking for handling (open)suse ´s 13.1 Network setup syntax.
+
 xen-tools 4.4.rcis2-dev03 (Forked release  12-July-2014)
 - added  patch-fix --hash_method=expect as an bugfix workarround for the incompatible sha512 salt for opensuse / sles
   this expects  dir  /etc/xen-tools/expect exist and look for i.e an expect chat script opensuse-13.1-passwd.exp 
