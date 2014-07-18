@@ -219,7 +219,6 @@ mount -o bind /sys ${prefix}/sys
 chroot ${prefix} /usr/bin/zypper --non-interactive install openssh libssh2-1
 #
 chroot ${prefix} /tmp/sshd-host-keys.sh
-
 chroot ${prefix} chkconfig sshd on
 
 #
