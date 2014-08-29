@@ -10,6 +10,8 @@ Bugs to fix and features to add for 5.0
  - add InstallArchPackage()  instead use of --install-method=tar
   -  DomU hooks: network , passwd , udev ... same was as for opensuse 13.1 
   -  DomU roles
+  ! current arch xen-tools are allmost broken , see https://aur.archlinux.org/packages/xen-tools/
+
 
 * add slackware 13.x support dom0 :
   - add InstallSlackPackage()  instead use of --install-method=tar
