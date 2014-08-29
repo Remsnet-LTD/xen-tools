@@ -6,12 +6,12 @@ See KNOWN_BUGS.markdown for real bugs.
 Bugs to fix and features to add for 5.0
 ---------------------------------------
 
-* add arch Linux domU support
+* add/fix arch Linux dom0 / domU support
  - add InstallArchPackage()  instead use of --install-method=tar
   -  DomU hooks: network , passwd , udev ... same was as for opensuse 13.1 
-  -  DomU roles
-  ! current arch xen-tools are allmost broken , see https://aur.archlinux.org/packages/xen-tools/
-
+  -  DomU roles<br>
+  * current arch xen-tools are allmost broken , see https://aur.archlinux.org/packages/xen-tools/
+  * https://wiki.archlinux.org/index.php/Xen
 
 * add slackware 13.x support dom0 :
   - add InstallSlackPackage()  instead use of --install-method=tar
