@@ -103,7 +103,7 @@ echo "(hd0)   /dev/xvda" > ${prefix}/boot/grub2/device.map
 
 # create default grub.conf
 test -f ${prefix}/etc/grub.conf && mv -f  ${prefix}/etc/grub.conf ${prefix}/etc/grub.conf.old
-echo 'setup --stage2=/boot/grub/stage2 --force-lba (hd0,0) (hd0,0)' >${prefix}/etc/grub.conf
+echo 'setup --stage2=/boot/grub2/stage2 --force-lba (hd0,0) (hd0,0)' >${prefix}/etc/grub.conf
 
 #
 # create boot menu
