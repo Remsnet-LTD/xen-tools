@@ -45,4 +45,4 @@ xen-create-image --dir=/VM \
         --arch=amd64 \
         --kernel=/bootxen/vmlinuz-debian-wheezy-install \
         --initrd=/bootxen/initrd-debian-wheezy-install
-root@ex40:debt1#
+ #
