@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# This script sets up the OMD repro for CentOS 6.x
+#
+# https://github.com/remsnet/xen-tools/
+#set -x
+prefix=$1
+#
+# Source our common functions
+#
+if [ -e /usr/share/xen-tools/common.sh ]; then
+. /usr/share/xen-tools/common.sh
+else
+. ./hooks/common.sh
+fi
+#
+# Log our start
+#
+logMessage Script $0 starting
+#
+# Update yum
+#
+if [ ! -d ${prefix}/proc ]; then
+mkdir -p ${prefix}/proc
+fi
+if [ ! -d ${prefix}/sys ]; then
+mkdir -p ${prefix}/sys
+fi
+if [ ! -d ${prefix}/dev ]; then
+mkdir -p ${prefix}/dev
+fi
+mount -o bind /proc ${prefix}/proc
+mount -o bind /sys ${prefix}/sys
+mount -o bind /dev ${prefix}/dev
+#
+chroot ${prefix} /usr/bin/yum -y install wget
+chroot ${prefix} /usr/bin/rpm -Uvh  https://labs.consol.de/repo/stable/rhel6/x86_64/labs-consol-stable.rhel6.noarch.rpm
+#
+umount -f ${prefix}/proc
+umount -f ${prefix}/sys
+umount -f ${prefix}/dev
+#
+# Log our finish
+#
+logMessage Script $0 finished
